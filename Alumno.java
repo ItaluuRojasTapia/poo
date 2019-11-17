@@ -21,6 +21,11 @@ public class Alumno extends Persona{
     id = alumno.id;
   }
 
+  public void setAlumno(String nombre, String apellidoPaterno, String apellidoMaterno, String id){
+    setPersona(nombre, apellidoPaterno, apellidoMaterno);
+    this.id = id;
+  }
+
   public void inscribirHorario(){
     System.out.println("Escoja las materias...");
     // Desplegar materias

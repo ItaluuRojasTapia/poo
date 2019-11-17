@@ -15,6 +15,10 @@ public class Profesor extends Personal{
     super(profesor);
   }
 
+  public void setProfesor(String nombre, String apellidoPaterno, String apellidoMaterno, String id) {
+    setPersonal(nombre, apellidoPaterno, apellidoMaterno, id, "Profesor");
+  }
+
   public void agregarHorario(Horario horario){
     horarioLaboral = horario;
   }

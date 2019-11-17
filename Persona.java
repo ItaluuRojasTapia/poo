@@ -20,6 +20,12 @@ public class Persona extends Object{
     this(persona.nombre, persona.apellidoPaterno, persona.apellidoMaterno);
   }
 
+  public void setPersona(String nombre, String apellidoPaterno, String apellidoMaterno) {
+    this.nombre = nombre;
+    this.apellidoPaterno = apellidoPaterno;
+    this.apellidoMaterno = apellidoMaterno;
+  }
+
   public String getNombre(){
     return nombre;
   }

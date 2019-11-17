@@ -1,8 +1,11 @@
-import java.util.InputMismatchException;
+// import java.util.NumberFormatException;
 
 public class Menu{
   private Teclado teclado;
   private int opcion;
+  private Administrativo administrativo;
+  private Alumno alumno;
+  private Profesor profesor;
 
   public Menu(){
     this(new Teclado());
@@ -30,7 +33,7 @@ public class Menu{
     try {
       boolean opcionValida = false;
       do {
-        opcion = teclado.leerEntero("Ingrese su opcion: ");
+        opcion = Integer.parseInt(teclado.leer("Ingrese su opcion: "));
         if (opcion == 0 || opcion == 1 || opcion == 2 || opcion == 3){
           opcionValida = true;
         }
@@ -45,7 +48,7 @@ public class Menu{
         case 2: ejecutarLoginProfesor(); break;
         case 3: ejecutarLoginAdministrativo(); break;
       }
-    } catch (InputMismatchException ime) {
+    } catch (NumberFormatException nfe) {
       limpiarPantalla();
       System.out.println("Su entrada no fue un numero. Vuelva a intentarlo ingresando un entero");
       teclado.destruir();
@@ -61,18 +64,192 @@ public class Menu{
     System.out.println("Login Alumno");
     System.out.println("--------------------");
     System.out.println("Aun no tiene numero de matricula? Registrese con el personal administrativo. (Ingrese \"0\" para regresar)\n\n");
-    opcion = teclado.leerEntero("Ingrese su numero de matricula:");
+    opcion = Integer.parseInt(teclado.leer("Ingrese su numero de matricula:"));
   }
   private void ejecutarLoginProfesor(){
     System.out.println("Login Profesor");
     System.out.println("--------------------");
     System.out.println("Aun no tiene numero de matricula? Registrese con el personal administrativo. (Ingrese \"0\" para regresar)\n\n");
-    opcion = teclado.leerEntero("Ingrese su numero de matricula:");
+    opcion = Integer.parseInt(teclado.leer("Ingrese su numero de matricula:"));
   }
   private void ejecutarLoginAdministrativo(){
-    System.out.println("Login Administrativo");
-    System.out.println("--------------------");
-    opcion = teclado.leerEntero("Ingrese su NSS:");
+    boolean loginValido = false;
+
+    do {
+      System.out.println("Login Administrativo");
+      System.out.println("--------------------");
+      System.out.println("(Ingrese 0 para regresar al menu principal)");
+      opcion = Integer.parseInt(teclado.leer("Ingrese su NSS:"));
+
+      if (opcion == 0) {
+        break;
+      }
+
+      administrativo = devolverAdministrativo();
+      if (administrativo != null) {
+        loginValido = true;
+      }
+
+    } while (!loginValido);
+
+    limpiarPantalla();
+
+    if (!loginValido) {
+      ejecutarLogin();
+    } else {
+      ejecutarMenuPrincipal(administrativo);
+    }
+  }
+  private Administrativo devolverAdministrativo(){
+    if (opcion == 2) { // Aqui se devera de validar con un flujo (carpeta con diferentes administrativos)
+      System.out.println("Ingresando al sistema...");
+      return new Administrativo();
+    }
+
+    System.out.println("Administrativo no encontrado");
+    return null;
+  }
+
+  private void ejecutarMenuPrincipal(Administrativo admin) {
+    do {
+      System.out.println("Bienvenido [ingresar nombre del administrativo]");
+      System.out.println("-----------------------------------------------");
+      System.out.println("1) Dar de alta a alumno");
+      System.out.println("2) Editar alumno");
+      System.out.println("3) Eliminar alumno");
+      System.out.println("4) Dar de alta a profesor");
+      System.out.println("5) Editar profesor");
+      System.out.println("6) Eliminar profesor");
+      System.out.println("7) Editar informacion propia");
+      System.out.println("0) Salir");
+
+      opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
+
+      limpiarPantalla();
+
+      switch (opcion) {
+        case 0: ejecutarLogin(); break;
+        case 1: darDeAlta(new Alumno()); break;
+        case 2: editar(buscarAlumno()); break;
+        case 3: eliminar(buscarAlumno()); break;
+        case 4: darDeAlta(new Profesor()); break;
+        case 5: editar(buscarProfesor()); break;
+        case 6: eliminar(buscarProfesor()); break;
+        case 7: editar(admin); break;
+        default: break;
+      }
+
+      limpiarPantalla();
+    } while (opcion != 0);
+  }
+  private Alumno buscarAlumno() {
+    // Buscara en el flujo un alumno buscandolo por su numero de boleta
+    teclado.leer("Ingrese el ID del alumno: ");
+    return null;
+  }
+  private Profesor buscarProfesor() {
+    teclado.leer("Ingrese ID del profesor: ");
+    return null;
+  }
+  private void darDeAlta(Alumno alumno) {
+    String nombre = teclado.leer("Ingrese nombre del alumno: ");
+    String apellidoPaterno = teclado.leer("Ingrese el apellido paterno del alumno: ");
+    String apellidoMaterno = teclado.leer("Ingrese el apellido materno del alumno: ");
+
+    // Generar ID - A partir de la fecha y de los alumnos que ya existen
+    String id = "201901"; // Primer cuatro digitos fecha, 2 digitos siguientes rol, 4 digitos ultimos no. registro
+
+    alumno.setAlumno(nombre, apellidoPaterno, apellidoMaterno, id);
+    System.out.println("Guardando Alumno...\n" + alumno);
+
+    // Guardar alumno (objeto) en carpeta de alumnos en archivo nombrado con su id
+    this.alumno = alumno; // Pa que jueguen con el alumno banda
+  }
+  private void editar(Alumno alumno) {
+    if (alumno == null) {
+      return;
+    }
+
+    do {
+      System.out.println("\nEditar alumno");
+      System.out.println("---------------");
+      System.out.println("1) Editar informacion basica (nombre, apellidos)");
+      System.out.println("2) Editar informacion personal (fecha de nacimiento, CURP, domicilio)");
+      System.out.println("3) Inscribir horario escolar");
+      System.out.println("4) Consultar horario escolar");
+      System.out.println("0) Regresar");
+
+      opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
+    } while (opcion != 0);
+
+    opcion = 2;
+  }
+  private void eliminar(Alumno alumno) {
+    if (alumno == null) {
+      return;
+    }
+
+    teclado.leer("asd: ");
+    teclado.leer("Esta seguro de querer eliminar al alumno: " + alumno.getNombre() + "? (s/n): ");
+    // Se elimina el objeto y su archivo
+  }
+  private void darDeAlta(Profesor profesor) {
+    String nombre = teclado.leer("Ingrese nombre de la profesor: ");
+    String apellidoPaterno = teclado.leer("Ingrese el apellido paterno del profesor: ");
+    String apellidoMaterno = teclado.leer("Ingrese el apellido materno del profesor: ");
+
+    // Generar ID - A partir de la fecha y de los alumnos que ya existen
+    String id = "201902"; // Primer cuatro digitos fecha, 2 digitos siguientes rol, 4 digitos ultimos no. registro
+
+    profesor.setProfesor(nombre, apellidoPaterno, apellidoMaterno, id);
+    System.out.println("Guardando profesor...\n" + profesor);
+
+    // Guardar alumno (objeto) en carpeta de alumnos en archivo nombrado con su id
+
+    this.profesor = profesor; // Pa que puedan jugar con el profe
+  }
+  private void editar(Profesor profesor) {
+    if (profesor == null) {
+      return;
+    }
+
+    do {
+      System.out.println("\nEditar profesor");
+      System.out.println("---------------");
+      System.out.println("1) Editar informacion basica (nombre, apellidos)");
+      System.out.println("2) Editar informacion personal (fecha de nacimiento, CURP, domicilio)");
+      System.out.println("3) Modificar horario escolar");
+      System.out.println("4) Consultar horario escolar");
+      System.out.println("0) Regresar");
+
+      opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
+    } while (opcion != 0);
+
+    opcion = 2;
+  }
+  private void eliminar(Profesor profesor) {
+    if (profesor == null) {
+      return;
+    }
+
+    teclado.leer("asd: ");
+    teclado.leer("Esta seguro de querer eliminar al alumno: " + profesor.getNombre() + "? (s/n): ");
+    // Se elimina el objeto y su archivo
+  }
+  private void editar(Administrativo admin) {
+    do {
+      System.out.println("\nEditar administrativo");
+      System.out.println("---------------");
+      System.out.println("1) Editar informacion basica (nombre, apellidos)");
+      System.out.println("2) Editar informacion personal (fecha de nacimiento, CURP, domicilio)");
+      System.out.println("3) Editar horario");
+      System.out.println("4) Editar sector");
+      System.out.println("0) Regresar");
+
+      opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
+    } while (opcion != 0);
+
+    opcion = 2;
   }
 
   public void limpiarPantalla(){

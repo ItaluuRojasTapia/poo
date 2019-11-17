@@ -19,6 +19,12 @@ public class Personal extends Persona{
     cargo = personal.cargo;
   }
 
+  public void setPersonal(String nombre, String apellidoPaterno, String apellidoMaterno, String id, String cargo) {
+    setPersona(nombre, apellidoPaterno, apellidoMaterno);
+    this.id = id;
+    this.cargo = cargo;
+  }
+
   public void editarInformacion(String cargo){
     this.cargo = cargo;
   }

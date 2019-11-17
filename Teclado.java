@@ -13,9 +13,9 @@ public class Teclado{
     this(teclado.teclado);
   }
 
-  public int leerEntero(String mensaje){
+  public String leer(String mensaje){
     System.out.print(mensaje);
-    return teclado.nextInt();
+    return teclado.nextLine();
   }
 
   @Override
