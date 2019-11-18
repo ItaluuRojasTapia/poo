@@ -1,4 +1,6 @@
-public class Persona extends Object{
+import java.io.Serializable;
+
+public class Persona extends Object implements Serializable{
   private String nombre;
   private String apellidoPaterno;
   private String apellidoMaterno;

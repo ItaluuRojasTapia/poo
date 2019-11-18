@@ -1,4 +1,6 @@
-public class Personal extends Persona{
+import java.io.Serializable;
+
+public class Personal extends Persona implements Serializable{
   private String id;
   private String nss;
   private String cargo;

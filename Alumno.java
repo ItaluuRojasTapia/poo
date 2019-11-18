@@ -1,4 +1,6 @@
-public class Alumno extends Persona{
+import java.io.Serializable;
+
+public class Alumno extends Persona implements Serializable {
   private String id;
   private float creditos;
   private boolean activo;

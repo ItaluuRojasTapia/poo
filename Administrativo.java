@@ -1,4 +1,6 @@
-public class Administrativo extends Personal{
+import java.io.Serializable;
+
+public class Administrativo extends Personal implements Serializable{
   private Horario horario;
   private String sector;
 

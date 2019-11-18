@@ -1,4 +1,6 @@
-// import java.util.NumberFormatException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.lang.ClassCastException;
 
 public class Menu{
   private Teclado teclado;
@@ -13,6 +15,11 @@ public class Menu{
   public Menu(Teclado teclado){
     super();
     this.teclado = teclado;
+
+    // Creando admin, si no existe
+    if (!(new File("admin.tmp")).exists()) {
+      crearAdmin();
+    }
   }
   public Menu(Menu menu){
     this(menu.teclado);
@@ -59,6 +66,12 @@ public class Menu{
       e.printStackTrace();
     }
   }
+  private void crearAdmin() {
+    Administrativo admin = new Administrativo("admin", null, null, "0");
+
+    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream("admin.tmp");
+    flujo.escribirObjeto(admin);
+  }
 
   private void ejecutarLoginAlumno(){
     System.out.println("Login Alumno");
@@ -75,22 +88,13 @@ public class Menu{
   private void ejecutarLoginAdministrativo(){
     boolean loginValido = false;
 
-    do {
-      System.out.println("Login Administrativo");
-      System.out.println("--------------------");
-      System.out.println("(Ingrese 0 para regresar al menu principal)");
-      opcion = Integer.parseInt(teclado.leer("Ingrese su NSS:"));
-
-      if (opcion == 0) {
-        break;
-      }
-
-      administrativo = devolverAdministrativo();
-      if (administrativo != null) {
-        loginValido = true;
-      }
-
-    } while (!loginValido);
+    System.out.println("Login Administrativo");
+    System.out.println("--------------------");
+    System.out.println("(Ingrese 0 para regresar al menu principal)");
+    administrativo = devolverAdministrativo();
+    if (administrativo != null) {
+      loginValido = true;
+    }
 
     limpiarPantalla();
 
@@ -101,9 +105,12 @@ public class Menu{
     }
   }
   private Administrativo devolverAdministrativo(){
-    if (opcion == 2) { // Aqui se devera de validar con un flujo (carpeta con diferentes administrativos)
-      System.out.println("Ingresando al sistema...");
-      return new Administrativo();
+    String nss = teclado.leer("Ingrese su nss: ");
+
+    if ((new File(nss + ".tmp")).exists()) { // Aqui se devera de validar con un flujo (carpeta con diferentes administrativos)
+      FlujoObjectInputStream flujo = new FlujoObjectInputStream(nss + ".tmp");
+      Administrativo admin = (Administrativo) flujo.leerObjeto();
+      return admin;
     }
 
     System.out.println("Administrativo no encontrado");
@@ -144,8 +151,18 @@ public class Menu{
   }
   private Alumno buscarAlumno() {
     // Buscara en el flujo un alumno buscandolo por su numero de boleta
-    teclado.leer("Ingrese el ID del alumno: ");
-    return null;
+    Alumno alumno = null;
+    try {
+      String id = teclado.leer("Ingrese el ID del alumno: ");
+      FlujoObjectInputStream flujo = new FlujoObjectInputStream(id + ".tmp");
+      alumno = (Alumno) flujo.leerObjeto();
+    } catch (ClassCastException cce) {
+      cce.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      return alumno;
+    }
   }
   private Profesor buscarProfesor() {
     teclado.leer("Ingrese ID del profesor: ");
@@ -163,6 +180,9 @@ public class Menu{
     System.out.println("Guardando Alumno...\n" + alumno);
 
     // Guardar alumno (objeto) en carpeta de alumnos en archivo nombrado con su id
+    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream(id + ".tmp");
+    flujo.escribirObjeto(alumno);
+
     this.alumno = alumno; // Pa que jueguen con el alumno banda
   }
   private void editar(Alumno alumno) {
