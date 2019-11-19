@@ -28,6 +28,10 @@ public class Alumno extends Persona implements Serializable {
     this.id = id;
   }
 
+  public String getId() {
+    return id;
+  }
+
   public void inscribirHorario(){
     System.out.println("Escoja las materias...");
     // Desplegar materias

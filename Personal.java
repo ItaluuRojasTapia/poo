@@ -27,6 +27,10 @@ public class Personal extends Persona implements Serializable{
     this.cargo = cargo;
   }
 
+  public String getId() {
+    return id;
+  }
+
   public void editarInformacion(String cargo){
     this.cargo = cargo;
   }

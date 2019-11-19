@@ -5,9 +5,7 @@ import java.lang.ClassCastException;
 public class Menu{
   private Teclado teclado;
   private int opcion;
-  private Administrativo administrativo;
-  private Alumno alumno;
-  private Profesor profesor;
+  private Configuracion configuracion;
 
   public Menu(){
     this(new Teclado());
@@ -16,16 +14,59 @@ public class Menu{
     super();
     this.teclado = teclado;
 
-    // Creando admin, si no existe
-    if (!(new File("admin.tmp")).exists()) {
-      crearAdmin();
+    crearAdmin();
+    // Creando configuracion si no existe
+    if (!verificarArchivoExiste("config.tmp")) {
+      crearConfiguracion();
+    } else {
+      configuracion = devolverConfiguracion();
     }
   }
   public Menu(Menu menu){
     this(menu.teclado);
   }
 
-  public void ejecutarLogin(){
+  private boolean verificarArchivoExiste(String path) {
+    if (new File(path).exists()) {
+      return true;
+    }
+
+    return false;
+  }
+  private void crearAdmin() {
+    Administrativo admin = new Administrativo("admin", null, null, "0");
+
+    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream("admin.admin");
+    flujo.escribirObjeto(admin);
+  }
+  private void crearConfiguracion() {
+    Configuracion config = new Configuracion("2019010000", "2019020000", "2019030000");
+
+    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream("config.tmp");
+    flujo.escribirObjeto(config);
+
+    this.configuracion = config;
+  }
+  private Configuracion devolverConfiguracion() {
+    // Buscara en el flujo un alumno buscandolo por su numero de boleta
+    Configuracion configuracion = null;
+    try {
+      FlujoObjectInputStream flujo = new FlujoObjectInputStream("config.tmp");
+      configuracion = (Configuracion) flujo.leerObjeto();
+    } catch (ClassCastException cce) {
+      cce.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      return configuracion;
+    }
+  }
+  private void guardarConfiguracion() {
+    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream("config.tmp");
+    flujo.escribirObjeto(configuracion);
+  }
+
+  public void ejecutarInicio(){
     // Inicio
     System.out.println("--------------------");
     System.out.println("Gestor escolar");
@@ -60,63 +101,127 @@ public class Menu{
       System.out.println("Su entrada no fue un numero. Vuelva a intentarlo ingresando un entero");
       teclado.destruir();
       teclado = new Teclado();
-      ejecutarLogin();
+      ejecutarInicio();
     } catch(Exception e) {
       System.out.println("ERROR:");
       e.printStackTrace();
     }
-  }
-  private void crearAdmin() {
-    Administrativo admin = new Administrativo("admin", null, null, "0");
 
-    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream("admin.tmp");
-    flujo.escribirObjeto(admin);
+    guardarConfiguracion();
   }
 
   private void ejecutarLoginAlumno(){
     System.out.println("Login Alumno");
     System.out.println("--------------------");
     System.out.println("Aun no tiene numero de matricula? Registrese con el personal administrativo. (Ingrese \"0\" para regresar)\n\n");
-    opcion = Integer.parseInt(teclado.leer("Ingrese su numero de matricula:"));
+    buscarYDevolverAlumno("Ingrese su ID: ");
   }
   private void ejecutarLoginProfesor(){
     System.out.println("Login Profesor");
     System.out.println("--------------------");
     System.out.println("Aun no tiene numero de matricula? Registrese con el personal administrativo. (Ingrese \"0\" para regresar)\n\n");
-    opcion = Integer.parseInt(teclado.leer("Ingrese su numero de matricula:"));
+    buscarYDevolverProfesor("Ingrese su ID: ");
   }
   private void ejecutarLoginAdministrativo(){
     boolean loginValido = false;
 
     System.out.println("Login Administrativo");
     System.out.println("--------------------");
-    System.out.println("(Ingrese 0 para regresar al menu principal)");
-    administrativo = devolverAdministrativo();
+    System.out.println("(Ingrese 0 para regresar al inicio)");
+    Administrativo administrativo = buscarYDevolverAdministrativo("Ingrese su id: ");
     if (administrativo != null) {
       loginValido = true;
     }
 
     limpiarPantalla();
 
-    if (!loginValido) {
-      ejecutarLogin();
-    } else {
+    if (loginValido) {
       ejecutarMenuPrincipal(administrativo);
     }
   }
-  private Administrativo devolverAdministrativo(){
-    String nss = teclado.leer("Ingrese su nss: ");
 
-    if ((new File(nss + ".tmp")).exists()) { // Aqui se devera de validar con un flujo (carpeta con diferentes administrativos)
-      FlujoObjectInputStream flujo = new FlujoObjectInputStream(nss + ".tmp");
-      Administrativo admin = (Administrativo) flujo.leerObjeto();
-      return admin;
+  private Administrativo buscarYDevolverAdministrativo(String mensaje){
+    // Buscara en el flujo un administrativo buscandolo por su id
+    Administrativo administrativo = null;
+    try {
+      String id = teclado.leer(mensaje);
+
+      if (id == "0") {
+        System.out.println("Volviendo al inicio...");
+        return null;
+      }
+
+      if (verificarArchivoExiste(id + ".admin")) {
+        FlujoObjectInputStream flujo = new FlujoObjectInputStream(id + ".admin");
+        administrativo = (Administrativo) flujo.leerObjeto();
+      } else {
+        System.out.println("Administrativo no encontrado");
+      }
+    } catch (ClassCastException cce) {
+      cce.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      return administrativo;
     }
+  }
+  private Alumno buscarYDevolverAlumno(String mensaje) {
+    // Buscara en el flujo un alumno buscandolo por su ID
+    Alumno alumno = null;
+    try {
+      String id = teclado.leer(mensaje);
 
-    System.out.println("Administrativo no encontrado");
-    return null;
+      if (id == "0") {
+        System.out.println("Volviendo al inicio...");
+        return null;
+      }
+
+      if (verificarArchivoExiste(id + ".alumno")) {
+        FlujoObjectInputStream flujo = new FlujoObjectInputStream(id + ".alumno");
+        alumno = (Alumno) flujo.leerObjeto();
+      } else {
+        System.out.println("Alumno no encontrado");
+      }
+    } catch (ClassCastException cce) {
+      cce.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      return alumno;
+    }
+  }
+  private Profesor buscarYDevolverProfesor(String mensaje) {
+    // Buscara en el flujo un profesor buscandolo por su ID
+    Profesor profesor = null;
+    try {
+      String id = teclado.leer(mensaje);
+
+      if (id == "0") {
+        System.out.println("Volviendo al inicio...");
+        return null;
+      }
+
+      if (verificarArchivoExiste(id + ".profesor")) {
+        FlujoObjectInputStream flujo = new FlujoObjectInputStream(id + ".profesor");
+        profesor = (Profesor) flujo.leerObjeto();
+      } else {
+        System.out.println("Profesor no encontrado");
+      }
+    } catch (ClassCastException cce) {
+      cce.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      return profesor;
+    }
   }
 
+  private void ejecutarMenuPrincipal(Alumno alumno) {
+    // Aqui va lo que puede hacer el alumno
+  }
+  private void ejecutarMenuPrincipal(Profesor profesor) {
+    // Aqui va lo que puede hacer el profesor
+  }
   private void ejecutarMenuPrincipal(Administrativo admin) {
     do {
       System.out.println("Bienvenido [ingresar nombre del administrativo]");
@@ -128,6 +233,9 @@ public class Menu{
       System.out.println("5) Editar profesor");
       System.out.println("6) Eliminar profesor");
       System.out.println("7) Editar informacion propia");
+      System.out.println("8) Dar de alta a administrativo");
+      System.out.println("9) Eliminar otro administrativo");
+      System.out.println("10 Eliminar esta cuenta");
       System.out.println("0) Salir");
 
       opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
@@ -135,60 +243,30 @@ public class Menu{
       limpiarPantalla();
 
       switch (opcion) {
-        case 0: ejecutarLogin(); break;
-        case 1: darDeAlta(new Alumno()); break;
-        case 2: editar(buscarAlumno()); break;
-        case 3: eliminar(buscarAlumno()); break;
-        case 4: darDeAlta(new Profesor()); break;
-        case 5: editar(buscarProfesor()); break;
-        case 6: eliminar(buscarProfesor()); break;
-        case 7: editar(admin); break;
+        case 0: ejecutarInicio(); break;
+        case 1: admin.registrar(new Alumno(), teclado, configuracion); break;
+        case 2: ejecutarMenuEditar(buscarYDevolverAlumno("Ingrese ID del alumno: ")); break;
+        case 3: admin.eliminar(buscarYDevolverAlumno("Ingrese ID del alumno: "), teclado); break;
+        case 4: admin.registrar(new Profesor(), teclado, configuracion); break;
+        case 5: ejecutarMenuEditar(buscarYDevolverProfesor("Ingrese ID del profesor: ")); break;
+        case 6: admin.eliminar(buscarYDevolverProfesor("Ingrese ID del profesor: "), teclado); break;
+        case 7: ejecutarMenuEditar(admin); break;
+        case 8: admin.registrar(new Administrativo(), teclado, configuracion); break;
+        case 9: admin.eliminar(buscarYDevolverAdministrativo("Ingrese ID del administrativo: "), teclado); break;
+        case 10: admin.eliminar(teclado); break;
         default: break;
       }
 
       limpiarPantalla();
     } while (opcion != 0);
   }
-  private Alumno buscarAlumno() {
-    // Buscara en el flujo un alumno buscandolo por su numero de boleta
-    Alumno alumno = null;
-    try {
-      String id = teclado.leer("Ingrese el ID del alumno: ");
-      FlujoObjectInputStream flujo = new FlujoObjectInputStream(id + ".tmp");
-      alumno = (Alumno) flujo.leerObjeto();
-    } catch (ClassCastException cce) {
-      cce.printStackTrace();
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      return alumno;
-    }
-  }
-  private Profesor buscarProfesor() {
-    teclado.leer("Ingrese ID del profesor: ");
-    return null;
-  }
-  private void darDeAlta(Alumno alumno) {
-    String nombre = teclado.leer("Ingrese nombre del alumno: ");
-    String apellidoPaterno = teclado.leer("Ingrese el apellido paterno del alumno: ");
-    String apellidoMaterno = teclado.leer("Ingrese el apellido materno del alumno: ");
 
-    // Generar ID - A partir de la fecha y de los alumnos que ya existen
-    String id = "201901"; // Primer cuatro digitos fecha, 2 digitos siguientes rol, 4 digitos ultimos no. registro
-
-    alumno.setAlumno(nombre, apellidoPaterno, apellidoMaterno, id);
-    System.out.println("Guardando Alumno...\n" + alumno);
-
-    // Guardar alumno (objeto) en carpeta de alumnos en archivo nombrado con su id
-    FlujoObjectOutputStream flujo = new FlujoObjectOutputStream(id + ".tmp");
-    flujo.escribirObjeto(alumno);
-
-    this.alumno = alumno; // Pa que jueguen con el alumno banda
-  }
-  private void editar(Alumno alumno) {
+  private void ejecutarMenuEditar(Alumno alumno) {
     if (alumno == null) {
       return;
     }
+
+    System.out.println("Editando alumno:\n" + alumno + "\n\n");
 
     do {
       System.out.println("\nEditar alumno");
@@ -213,22 +291,7 @@ public class Menu{
     teclado.leer("Esta seguro de querer eliminar al alumno: " + alumno.getNombre() + "? (s/n): ");
     // Se elimina el objeto y su archivo
   }
-  private void darDeAlta(Profesor profesor) {
-    String nombre = teclado.leer("Ingrese nombre de la profesor: ");
-    String apellidoPaterno = teclado.leer("Ingrese el apellido paterno del profesor: ");
-    String apellidoMaterno = teclado.leer("Ingrese el apellido materno del profesor: ");
-
-    // Generar ID - A partir de la fecha y de los alumnos que ya existen
-    String id = "201902"; // Primer cuatro digitos fecha, 2 digitos siguientes rol, 4 digitos ultimos no. registro
-
-    profesor.setProfesor(nombre, apellidoPaterno, apellidoMaterno, id);
-    System.out.println("Guardando profesor...\n" + profesor);
-
-    // Guardar alumno (objeto) en carpeta de alumnos en archivo nombrado con su id
-
-    this.profesor = profesor; // Pa que puedan jugar con el profe
-  }
-  private void editar(Profesor profesor) {
+  private void ejecutarMenuEditar(Profesor profesor) {
     if (profesor == null) {
       return;
     }
@@ -256,7 +319,7 @@ public class Menu{
     teclado.leer("Esta seguro de querer eliminar al alumno: " + profesor.getNombre() + "? (s/n): ");
     // Se elimina el objeto y su archivo
   }
-  private void editar(Administrativo admin) {
+  private void ejecutarMenuEditar(Administrativo admin) {
     do {
       System.out.println("\nEditar administrativo");
       System.out.println("---------------");
@@ -267,6 +330,13 @@ public class Menu{
       System.out.println("0) Regresar");
 
       opcion = Integer.parseInt(teclado.leer("Escoja una opcion: "));
+
+      switch (opcion) {
+        case 1: admin.editarInformacionBasica(teclado); break;
+        case 2: admin.editarInformacionPersonal(teclado); break;
+
+        case 0: default: break;
+      }
     } while (opcion != 0);
 
     opcion = 2;

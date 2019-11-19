@@ -27,6 +27,18 @@ public class Persona extends Object implements Serializable{
     this.apellidoPaterno = apellidoPaterno;
     this.apellidoMaterno = apellidoMaterno;
   }
+  public void setFechaNacimiento(String fecha) {
+    fechaNacimiento = fecha;
+  }
+  public void setEdad(int edad) {
+    this.edad = edad;
+  }
+  public void setCurp(String curp) {
+    this.curp = curp;
+  }
+  public void setDomicilio(String domicilio) {
+    this.domicilio = domicilio;
+  }
 
   public String getNombre(){
     return nombre;
